@@ -51,14 +51,16 @@ func (h *Handler) UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Services.UserService.Login(r.Context(), data)
+	token, err := h.Services.UserService.Login(r.Context(), data)
 
 	if err != nil {
 		pkg.BadRequest(err, w)
 		return
 	}
 
-	err = pkg.WriteResponse(w, user)
+	response := dto.ResponseToken{Token: token}
+
+	err = pkg.WriteResponse(w, response)
 	if err != nil {
 		pkg.BadRequest(err, w)
 		return

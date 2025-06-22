@@ -42,18 +42,23 @@ func (u *UserService) Register(ctx context.Context, user dto.RegisterUser) (*mod
 	return data, nil
 }
 
-func (u *UserService) Login(ctx context.Context, data dto.LoginUser) (*model.User, error) {
+func (u *UserService) Login(ctx context.Context, data dto.LoginUser) (string, error) {
 
 	user, err := u.UserRepository.GetByEmail(ctx, data.Email)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	hasPassword := pkg.CheckPasswordHash(data.Password, user.Password)
 
 	if !hasPassword {
-		return nil, errors.New("password is wrong")
+		return "", errors.New("password is wrong")
 	}
 
-	return user, nil
+	token, err := pkg.CreateToken(user)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
