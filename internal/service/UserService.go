@@ -1,34 +1,59 @@
 package service
 
 import (
+	"context"
 	"database/sql"
-	"user-service/internal/Model"
+	"errors"
+	"user-service/internal/dto"
+	"user-service/internal/model"
 	"user-service/internal/repository"
-	"user-service/internal/request"
+	"user-service/pkg"
 )
 
 type UserServiceInterface interface {
-	Register(user request.RegisterUser) (*Model.User, error)
+	Register(context.Context, dto.RegisterUser) (*model.User, error)
 }
 
 type UserService struct {
-	db             *sql.DB
 	UserRepository *repository.UserRepository
 }
 
 func NewUserService(db *sql.DB) *UserService {
 	return &UserService{
-		db:             db,
 		UserRepository: repository.NewUserRepository(db),
 	}
 }
 
-func (u *UserService) Register(user request.RegisterUser) (*Model.User, error) {
+func (u *UserService) Register(ctx context.Context, user dto.RegisterUser) (*model.User, error) {
 
-	err, data := u.UserRepository.Register(user)
+	hasPassword, err := pkg.HashPassword(user.Password)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = hasPassword
+
+	data, err := u.UserRepository.Register(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
 	return data, nil
+}
+
+func (u *UserService) Login(ctx context.Context, data dto.LoginUser) (*model.User, error) {
+
+	user, err := u.UserRepository.GetByEmail(ctx, data.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	hasPassword := pkg.CheckPasswordHash(data.Password, user.Password)
+
+	if !hasPassword {
+		return nil, errors.New("password is wrong")
+	}
+
+	return user, nil
 }

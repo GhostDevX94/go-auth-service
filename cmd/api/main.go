@@ -6,9 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"user-service/configs"
+	"user-service/internal/configs"
 	"user-service/internal/db"
 	"user-service/internal/handler"
+	"user-service/internal/middleware"
 	"user-service/internal/service"
 )
 
@@ -21,8 +22,7 @@ func main() {
 
 	connect, err := db.Connect()
 	if err != nil {
-		log.Printf("Error connecting to database: %v", err)
-		return
+		log.Fatalf("Error connecting to database: %v", err)
 	}
 
 	services := service.NewServices(connect)
@@ -31,9 +31,15 @@ func main() {
 		Handler: handler.NewHandler(services),
 	}
 
+	port := os.Getenv("APP_PORT")
+
+	if port == "" {
+		port = ":8080"
+	}
+
 	server := &http.Server{
-		Addr:    os.Getenv("APP_PORT"),
-		Handler: handler.Route(app.Handler),
+		Addr:    port,
+		Handler: middleware.ApiMiddleware(handler.Route(app.Handler)),
 	}
 
 	fmt.Println("Listening on port " + os.Getenv("APP_PORT"))

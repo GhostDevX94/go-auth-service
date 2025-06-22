@@ -1,14 +1,15 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"user-service/internal/Model"
-	"user-service/internal/request"
+	"user-service/internal/dto"
+	"user-service/internal/model"
 )
 
 type UserRepositoryInterface interface {
-	Register(user request.RegisterUser) (*Model.User, error)
+	Register(context.Context, dto.RegisterUser) (*model.User, error)
+	GetByEmail(context.Context, string) (*model.User, error)
 }
 
 type UserRepository struct {
@@ -21,8 +22,41 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	}
 }
 
-func (r *UserRepository) Register(user request.RegisterUser) (*Model.User, error) {
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	var user model.User
+	query := "SELECT id,name,surname ,email, phone, password FROM users WHERE email = $1"
+	err := r.db.QueryRowContext(ctx, query, email).Scan(
+		&user.Id,
+		&user.Name,
+		&user.Surname,
+		&user.Email,
+		&user.Phone,
+		&user.Password,
+	)
 
-	return nil, errors.New("user not created")
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) Register(ctx context.Context, payload dto.RegisterUser) (*model.User, error) {
+
+	var user model.User
+
+	query := "INSERT INTO users (name,surname ,email, phone, password) VALUES ($1, $2, $3, $4,$5) RETURNING id,name,surname ,email, phone"
+	err := r.db.QueryRowContext(ctx, query, payload.Name, payload.Surname, payload.Email, payload.Phone, payload.Password).Scan(
+		&user.Id,
+		&user.Name,
+		&user.Surname,
+		&user.Email,
+		&user.Phone,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 
 }
