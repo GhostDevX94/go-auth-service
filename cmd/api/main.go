@@ -25,10 +25,10 @@ func main() {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	services := service.NewServices(connect)
-
 	app := configs.Application{
-		Handler: handler.NewHandler(services),
+		Handler: handler.NewHandler(
+			service.NewServices(connect),
+		),
 	}
 
 	port := os.Getenv("APP_PORT")
