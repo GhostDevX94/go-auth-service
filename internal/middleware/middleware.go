@@ -27,27 +27,26 @@ func ApiMiddleware(next http.Handler) http.Handler {
 			bodyBytes, err := io.ReadAll(r.Body)
 
 			if err != nil {
-				logrus.WithError(err).Error("Failed to read request body")
+				logrus.WithError(err).Error("❌ Failed to read request body")
 				pkg.BadRequest(err, w)
+				return
 			}
 
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 
-		if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
-			logrus.WithFields(logrus.Fields{
-				"method":     r.Method,
-				"path":       r.URL.Path,
-				"user_agent": r.UserAgent(),
-				"ip":         r.RemoteAddr,
-				"body":       string(bodyBytes),
-			}).Info("incoming request")
-		} else {
-			logrus.WithFields(logrus.Fields{
-				"method": r.Method,
-				"path":   r.URL.Path,
-			}).Info("incoming request")
+		logEntry := logrus.WithFields(logrus.Fields{
+			"method":     r.Method,
+			"path":       r.URL.Path,
+			"user_agent": r.UserAgent(),
+			"ip":         r.RemoteAddr,
+		})
+
+		if (r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch) && len(bodyBytes) > 0 {
+			logEntry = logEntry.WithField("body", string(bodyBytes))
 		}
+
+		logEntry.Info("📥 Incoming request")
 
 		next.ServeHTTP(w, r)
 	})

@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"user-service/internal/configs"
@@ -11,18 +10,23 @@ import (
 	"user-service/internal/handler"
 	"user-service/internal/middleware"
 	"user-service/internal/service"
+	"user-service/pkg"
 )
+
+func init() {
+	pkg.SetupLogger()
+}
 
 func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error : %s", err)
+		logrus.WithError(err).Fatal("❌ Failed to load environment variables")
 	}
 
 	connect, err := db.Connect()
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		logrus.WithError(err).Fatal("❌ Failed to connect to database")
 	}
 
 	app := configs.Application{
@@ -42,11 +46,10 @@ func main() {
 		Handler: middleware.ApiMiddleware(handler.Route(app.Handler)),
 	}
 
-	fmt.Println("Listening on port " + os.Getenv("APP_PORT"))
-
-	log.Printf("Server is running on %s\n", os.Getenv("APP_PORT"))
+	logrus.WithField("port", port).Info("🚀 Starting user service server")
+	logrus.WithField("port", port).Info("📡 Server is listening for requests")
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server failed: %v", err)
+		logrus.WithError(err).Fatal("❌ Server failed to start")
 	}
 }
