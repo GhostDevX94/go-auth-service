@@ -40,10 +40,39 @@ func BadRequest(err error, w http.ResponseWriter) {
 
 	w.WriteHeader(http.StatusBadRequest)
 
-	if writeErr := WriteResponse(w, err.Error()); writeErr != nil {
+	response := map[string]string{
+		"message": err.Error(),
+	}
+
+	if writeErr := WriteResponse(w, response); writeErr != nil {
 		_ = fmt.Errorf("failed to write response: %w", writeErr)
 	}
 
+}
+
+var v *validator.Validate
+
+func init() {
+	v = validator.New(validator.WithRequiredStructEnabled())
+}
+
+func DecodeAndValidate(data any, r *http.Request, w http.ResponseWriter) bool {
+
+	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
+		BadRequest(err, w)
+		return false
+	}
+
+	if validateError := v.Struct(data); validateError != nil {
+		err := StatusUnprocessableEntity(validateError, w)
+		if err != nil {
+			BadRequest(err, w)
+			return false
+		}
+		return false
+	}
+
+	return true
 }
 
 func WriteResponse(w http.ResponseWriter, data any) error {

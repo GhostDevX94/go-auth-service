@@ -26,7 +26,6 @@ func NewUserService(db *sql.DB) *UserService {
 }
 
 func (u *UserService) Register(ctx context.Context, user dto.RegisterUser) (*model.User, error) {
-	logrus.WithField("email", user.Email).Info("🔐 Hashing user password")
 
 	hasPassword, err := pkg.HashPassword(user.Password)
 
@@ -37,7 +36,6 @@ func (u *UserService) Register(ctx context.Context, user dto.RegisterUser) (*mod
 
 	user.Password = hasPassword
 
-	logrus.WithField("email", user.Email).Info("💾 Saving user to database")
 	data, err := u.UserRepository.Register(ctx, user)
 	if err != nil {
 		logrus.WithError(err).WithField("email", user.Email).Error("❌ Failed to save user to database")
