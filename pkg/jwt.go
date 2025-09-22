@@ -1,17 +1,19 @@
 package pkg
 
 import (
-	"github.com/golang-jwt/jwt/v5"
 	"os"
 	"time"
 	"user-service/internal/model"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func CreateToken(user *model.User) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user,
-		"iss": "todo-app",
-		"aud": user.Email,
+		"sub": user.Id,
+		"iss": "user-service",
+		"jti": uuid.NewString(),
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"iat": time.Now().Unix(),
 	})

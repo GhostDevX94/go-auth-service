@@ -3,7 +3,7 @@ package repository
 import "database/sql"
 
 type Repositories struct {
-	UserRepository *UserRepository
+	UserRepository UserRepositoryInterface
 }
 
 func NewRepositories(db *sql.DB) *Repositories {

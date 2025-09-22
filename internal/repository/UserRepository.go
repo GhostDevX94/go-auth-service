@@ -3,9 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/sirupsen/logrus"
+	"time"
 	"user-service/internal/dto"
 	"user-service/internal/model"
+
+	"github.com/sirupsen/logrus"
 )
 
 type UserRepositoryInterface interface {
@@ -28,7 +30,10 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 
 	var user model.User
 	query := "SELECT id,name,surname ,email, phone, password FROM users WHERE email = $1"
-	err := r.db.QueryRowContext(ctx, query, email).Scan(
+	// add per-query timeout
+	qctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	err := r.db.QueryRowContext(qctx, query, email).Scan(
 		&user.Id,
 		&user.Name,
 		&user.Surname,
@@ -56,7 +61,10 @@ func (r *UserRepository) Register(ctx context.Context, payload dto.RegisterUser)
 	var user model.User
 
 	query := "INSERT INTO users (name,surname ,email, phone, password) VALUES ($1, $2, $3, $4,$5) RETURNING id,name,surname ,email, phone"
-	err := r.db.QueryRowContext(ctx, query, payload.Name, payload.Surname, payload.Email, payload.Phone, payload.Password).Scan(
+	// add per-query timeout
+	qctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	err := r.db.QueryRowContext(qctx, query, payload.Name, payload.Surname, payload.Email, payload.Phone, payload.Password).Scan(
 		&user.Id,
 		&user.Name,
 		&user.Surname,
