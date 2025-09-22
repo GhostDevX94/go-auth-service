@@ -27,7 +27,7 @@ func ApiMiddleware(next http.Handler) http.Handler {
 			bodyBytes, err := io.ReadAll(r.Body)
 
 			if err != nil {
-				logrus.WithError(err).Error("❌ Failed to read request body")
+				logrus.WithError(err).Error("Failed to read request body")
 				pkg.BadRequest(err, w)
 				return
 			}
@@ -46,7 +46,7 @@ func ApiMiddleware(next http.Handler) http.Handler {
 			logEntry = logEntry.WithField("body", string(bodyBytes))
 		}
 
-		logEntry.Info("📥 Incoming request")
+		logEntry.Info("Incoming request")
 
 		next.ServeHTTP(w, r)
 	})

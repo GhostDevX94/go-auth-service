@@ -21,12 +21,12 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		logrus.WithError(err).Fatal("❌ Failed to load environment variables")
+		logrus.WithError(err).Fatal("Failed to load environment variables")
 	}
 
 	connect, err := db.Connect()
 	if err != nil {
-		logrus.WithError(err).Fatal("❌ Failed to connect to database")
+		logrus.WithError(err).Fatal("Failed to connect to database")
 	}
 
 	app := configs.Application{
@@ -46,10 +46,9 @@ func main() {
 		Handler: middleware.ApiMiddleware(handler.Route(app.Handler)),
 	}
 
-	logrus.WithField("port", port).Info("🚀 Starting user service server")
-	logrus.WithField("port", port).Info("📡 Server is listening for requests")
+	logrus.WithField("port", port).Info("Starting user service server")
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		logrus.WithError(err).Fatal("❌ Server failed to start")
+		logrus.WithError(err).Fatal("Server failed to start")
 	}
 }
