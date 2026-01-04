@@ -9,9 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func Connect() (*sql.DB, error) {
-	dns := os.Getenv("DATABASE_URL")
-
+func Connect(dns string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dns)
 	if err != nil {
 		return nil, err

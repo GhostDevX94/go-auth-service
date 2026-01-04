@@ -52,3 +52,19 @@ migrate-rollback:
 	@read -p "Enter the number of steps to roll back: " STEPS; \
 	if [ -z "$$STEPS" ]; then echo "Шаги не указаны!"; exit 1; fi; \
 	$(MIGRATE) -database $(DB_URL) -path $(MIGRATIONS_DIR) down $$STEPS
+
+swagger-install:
+	@echo "Installing swag CLI..."
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+swagger-gen:
+	@echo "Generating Swagger documentation..."
+	~/go/bin/swag init -g cmd/api/main.go -o docs
+
+swagger-clean:
+	@echo "Cleaning Swagger documentation..."
+	rm -rf docs
+
+test:
+	@echo "Running tests..."
+	go test -v ./...
